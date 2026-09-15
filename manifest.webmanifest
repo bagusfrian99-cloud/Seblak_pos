@@ -1,0 +1,9 @@
+{
+  "name": "Seblak Story POS",
+  "short_name": "Seblak Story POS",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fff8df",
+  "theme_color": "#ffd21c",
+  "icons": [{"src":"seblak_story_logo.png","sizes":"512x512","type":"image/png","purpose":"any"}]
+}
