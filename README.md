@@ -1,4 +1,4 @@
-# Seblak Story POS Web v3.36.16
+# Seblak Story POS Web v3.36.17
 
 Versi web GitHub Pages Seblak Story POS.
 
@@ -9,3 +9,6 @@ Pada menu Backup, gunakan **📁 Pilih Folder Backup** sekali untuk memilih fold
 Jika browser tidak mendukung File System Access API atau izin folder belum diberikan, aplikasi menggunakan download biasa sebagai fallback.
 
 Data aplikasi tetap disimpan di localStorage browser.
+
+
+BLE printer support added. Requires a BLE printer with a GATT writable characteristic; Bluetooth Classic/SPP printers are not supported by Web Bluetooth.
