@@ -3,362 +3,121 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kamera Web Stream & Snapshot</title>
-  <style>
-    :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #f8fafc;
-      --accent: #38bdf8;
-      --accent-hover: #0284c7;
-      --success: #22c55e;
-      --success-hover: #16a34a;
-      --danger: #ef4444;
-      --danger-hover: #dc2626;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem;
-    }
-
-    .container {
-      background-color: var(--card-bg);
-      border-radius: 12px;
-      padding: 1.5rem;
-      max-width: 640px;
-      width: 100%;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
-    }
-
-    h1 {
-      font-size: 1.25rem;
-      margin-top: 0;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-
-    .video-wrapper {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background-color: #000;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 1rem;
-      border: 1px solid #334155;
-    }
-
-    video, img.snapshot-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .controls {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .controls-row {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    select, button {
-      font-size: 0.9rem;
-      padding: 0.65rem 1rem;
-      border-radius: 6px;
-      border: none;
-      outline: none;
-    }
-
-    select {
-      flex: 1;
-      background-color: #334155;
-      color: var(--text);
-      cursor: pointer;
-    }
-
-    button {
-      flex: 1;
-      background-color: var(--accent);
-      color: #0f172a;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, opacity 0.2s;
-    }
-
-    button:hover:not(:disabled) {
-      background-color: var(--accent-hover);
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    button.stop {
-      background-color: var(--danger);
-      color: #fff;
-    }
-
-    button.stop:hover:not(:disabled) {
-      background-color: var(--danger-hover);
-    }
-
-    button.download {
-      background-color: var(--success);
-      color: #fff;
-    }
-
-    button.download:hover:not(:disabled) {
-      background-color: var(--success-hover);
-    }
-
-    .status {
-      padding: 0.75rem;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      margin-bottom: 1rem;
-      display: none;
-      word-break: break-word;
-    }
-
-    .status.error {
-      background-color: #450a0a;
-      color: #fca5a5;
-      border: 1px solid #991b1b;
-      display: block;
-    }
-
-    .status.info {
-      background-color: #0c4a6e;
-      color: #7dd3fc;
-      border: 1px solid #075985;
-      display: block;
-    }
-
-    .preview-section {
-      margin-top: 1.5rem;
-      border-top: 1px dashed #334155;
-      padding-top: 1rem;
-      display: none;
-    }
-
-    .preview-section h2 {
-      font-size: 1rem;
-      margin-top: 0;
-      margin-bottom: 0.75rem;
-    }
-  </style>
+  <title>Photobooth PWA</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div class="container">
-    <h1>Webcam Stream & Snapshot</h1>
-    
-    <div id="status" class="status"></div>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>📸 Photobooth PWA</h1>
+      <button id="btnInstall" class="btn-install" style="display: none;">📲 Install App</button>
+    </header>
 
-    <!-- Live Stream Video -->
-    <div class="video-wrapper">
-      <video id="webcam" autoplay playsinline muted></video>
-    </div>
+    <main class="main-content">
+      <div class="viewfinder-card">
+        <!-- Live Camera Container -->
+        <div class="video-container" id="videoContainer">
+          <video id="webcam" autoplay playsinline muted></video>
+          <div id="countdownOverlay" class="countdown-overlay"></div>
+          <div id="flashOverlay" class="flash-overlay"></div>
+        </div>
 
-    <div class="controls">
-      <div class="controls-row">
-        <select id="cameraSelect" disabled>
-          <option value="">Memuat daftar kamera...</option>
-        </select>
-      </div>
-      <div class="controls-row">
-        <button id="btnToggle">Nyalakan Kamera</button>
-        <button id="btnSnapshot" disabled>Ambil Foto</button>
-      </div>
-    </div>
+        <!-- Camera Toolbar -->
+        <div class="toolbar">
+          <div class="tool-group">
+            <label for="cameraSelect">Kamera:</label>
+            <select id="cameraSelect" disabled><option>Memuat...</option></select>
+          </div>
+          
+          <div class="tool-group">
+            <label for="filterSelect">Filter:</label>
+            <select id="filterSelect">
+              <option value="none">Normal</option>
+              <option value="grayscale(100%)">Hitam Putih (B&W)</option>
+              <option value="sepia(80%)">Vintage Sepia</option>
+              <option value="contrast(140%) brightness(110%)">Vibrant High-Contrast</option>
+              <option value="hue-rotate(180deg)">Cyberpunk</option>
+              <option value="invert(100%)">Invert Negative</option>
+            </select>
+          </div>
 
-    <!-- Section Pratinjau Foto & Unduh -->
-    <div id="previewSection" class="preview-section">
-      <h2>Pratinjau Hasil Foto</h2>
-      <div class="video-wrapper">
-        <img id="snapshotImg" class="snapshot-img" alt="Pratinjau Foto">
+          <div class="tool-group">
+            <label for="modeSelect">Mode Foto:</label>
+            <select id="modeSelect">
+              <option value="single">Single Photo (1 Foto)</option>
+              <option value="strip4">Photobooth Strip (4-Cut)</option>
+            </select>
+          </div>
+
+          <div class="tool-group">
+            <label for="timerSelect">Timer:</label>
+            <select id="timerSelect">
+              <option value="0">Tanpa Timer</option>
+              <option value="3" selected>3 Detik</option>
+              <option value="5">5 Detik</option>
+            </select>
+          </div>
+
+          <div class="tool-group checkboxes">
+            <label class="checkbox-label">
+              <input type="checkbox" id="chkMirror" checked> Cermin (Mirror)
+            </label>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button id="btnToggleCam" class="btn btn-primary">Nyalakan Kamera</button>
+          <button id="btnCapture" class="btn btn-action" disabled>📸 Ambil Foto</button>
+        </div>
+
+        <div id="statusMsg" class="status-msg"></div>
       </div>
-      <div class="controls-row">
-        <button id="btnDownload" class="download">Unduh Gambar (PNG)</button>
-      </div>
-    </div>
+
+      <!-- Preview & Result Section -->
+      <section id="resultSection" class="result-card" style="display: none;">
+        <h2>✨ Hasil Foto</h2>
+        <div class="frame-style-selector" id="frameStyleControls" style="display: none;">
+          <label>Warna Frame Strip:</label>
+          <div class="color-options">
+            <button class="color-btn active" data-color="#ffffff" style="background: #ffffff;"></button>
+            <button class="color-btn" data-color="#1e293b" style="background: #1e293b;"></button>
+            <button class="color-btn" data-color="#fbcfe8" style="background: #fbcfe8;"></button>
+            <button class="color-btn" data-color="#bae6fd" style="background: #bae6fd;"></button>
+            <button class="color-btn" data-color="#fef08a" style="background: #fef08a;"></button>
+          </div>
+        </div>
+
+        <div class="preview-box">
+          <img id="resultImage" alt="Hasil Photobooth">
+        </div>
+
+        <div class="result-actions">
+          <button id="btnDownload" class="btn btn-success">💾 Unduh PNG</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Photobooth PWA &bull; GitHub Pages Ready</p>
+    </footer>
   </div>
 
-  <!-- Canvas Tersembunyi untuk Memproses Gambar -->
-  <canvas id="canvas" style="display: none;"></canvas>
+  <canvas id="renderCanvas" style="display: none;"></canvas>
 
+  <script src="app.js"></script>
   <script>
-    const video = document.getElementById('webcam');
-    const cameraSelect = document.getElementById('cameraSelect');
-    const btnToggle = document.getElementById('btnToggle');
-    const btnSnapshot = document.getElementById('btnSnapshot');
-    const btnDownload = document.getElementById('btnDownload');
-    const previewSection = document.getElementById('previewSection');
-    const snapshotImg = document.getElementById('snapshotImg');
-    const statusDiv = document.getElementById('status');
-    const canvas = document.getElementById('canvas');
-
-    let currentStream = null;
-    let isStreaming = false;
-    let currentDataUrl = null;
-
-    function showStatus(msg, type = 'info') {
-      statusDiv.textContent = msg;
-      statusDiv.className = `status ${type}`;
-    }
-
-    function clearStatus() {
-      statusDiv.className = 'status';
-      statusDiv.textContent = '';
-    }
-
-    function checkCapabilities() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        showStatus("Browser tidak mendukung kamera / dipanggil bukan via HTTPS.", "error");
-        return false;
-      }
-      return true;
-    }
-
-    async function getCameraDevices() {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(d => d.kind === 'videoinput');
-        
-        cameraSelect.innerHTML = '';
-        if (videoDevices.length === 0) {
-          showStatus("Tidak ada kamera terdeteksi.", "error");
-          cameraSelect.disabled = true;
-          return;
-        }
-
-        videoDevices.forEach((device, index) => {
-          const option = document.createElement('option');
-          option.value = device.deviceId;
-          option.text = device.label || `Kamera ${index + 1}`;
-          cameraSelect.appendChild(option);
-        });
-
-        cameraSelect.disabled = false;
-      } catch (err) {
-        showStatus("Gagal membaca daftar perangkat: " + err.message, "error");
-      }
-    }
-
-    async function startCamera(deviceId = null) {
-      stopCamera();
-
-      const constraints = {
-        video: deviceId 
-          ? { deviceId: { exact: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } }
-          : { facingMode: 'user', width: { ideal: 1920 }, height: { ideal: 1080 } },
-        audio: false
-      };
-
-      try {
-        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = currentStream;
-        isStreaming = true;
-        
-        btnToggle.textContent = 'Matikan Kamera';
-        btnToggle.classList.add('stop');
-        btnSnapshot.disabled = false;
-        clearStatus();
-
-        await getCameraDevices();
-        if (deviceId) {
-          cameraSelect.value = deviceId;
-        }
-      } catch (err) {
-        isStreaming = false;
-        btnToggle.textContent = 'Nyalakan Kamera';
-        btnToggle.classList.remove('stop');
-        btnSnapshot.disabled = true;
-        
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          showStatus("Izin kamera ditolak. Silakan izinkan akses kamera di ikon gembok browser Anda.", "error");
-        } else {
-          showStatus("Gagal mengakses kamera: " + err.message, "error");
-        }
-      }
-    }
-
-    function stopCamera() {
-      if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-        currentStream = null;
-      }
-      video.srcObject = null;
-      isStreaming = false;
-      btnToggle.textContent = 'Nyalakan Kamera';
-      btnToggle.classList.remove('stop');
-      btnSnapshot.disabled = true;
-    }
-
-    function takeSnapshot() {
-      if (!isStreaming) return;
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      const context = canvas.getContext('2d');
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      currentDataUrl = canvas.toDataURL('image/png');
-      snapshotImg.src = currentDataUrl;
-      
-      previewSection.style.display = 'block';
-      previewSection.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function downloadSnapshot() {
-      if (!currentDataUrl) return;
-
-      const link = document.createElement('a');
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      link.download = `snapshot-${timestamp}.png`;
-      link.href = currentDataUrl;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    btnToggle.addEventListener('click', () => {
-      if (isStreaming) {
-        stopCamera();
-      } else {
-        startCamera(cameraSelect.value);
-      }
-    });
-
-    cameraSelect.addEventListener('change', () => {
-      if (isStreaming) {
-        startCamera(cameraSelect.value);
-      }
-    });
-
-    btnSnapshot.addEventListener('click', takeSnapshot);
-    btnDownload.addEventListener('click', downloadSnapshot);
-
-    if (checkCapabilities()) {
-      getCameraDevices();
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW Registered!', reg))
+          .catch(err => console.error('SW Failed!', err));
+      });
     }
   </script>
 </body>
