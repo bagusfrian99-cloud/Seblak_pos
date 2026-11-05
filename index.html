@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Photobooth PWA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Photobooth Studio - Landscape Fullscreen</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -12,100 +12,116 @@
 </head>
 <body>
 
-  <div class="app-container">
+  <div class="app-viewport">
+    <!-- Top Bar Header -->
     <header class="app-header">
-      <h1>📸 Photobooth PWA</h1>
-      <button id="btnInstall" class="btn-install" style="display: none;">📲 Install App</button>
+      <div class="brand">
+        <span class="icon">📸</span>
+        <h1>Photobooth Studio</h1>
+      </div>
+      <button id="btnInstall" class="btn-install" style="display: none;">📲 Install PWA</button>
     </header>
 
-    <main class="main-content">
-      <div class="viewfinder-card">
-        <!-- Live Camera Container -->
-        <div class="video-container" id="videoContainer">
-          <video id="webcam" autoplay playsinline muted></video>
-          <div id="countdownOverlay" class="countdown-overlay"></div>
-          <div id="flashOverlay" class="flash-overlay"></div>
-        </div>
-
-        <!-- Camera Toolbar -->
-        <div class="toolbar">
-          <div class="tool-group">
-            <label for="cameraSelect">Kamera:</label>
-            <select id="cameraSelect" disabled><option>Memuat...</option></select>
-          </div>
-          
-          <div class="tool-group">
-            <label for="filterSelect">Filter:</label>
-            <select id="filterSelect">
-              <option value="none">Normal</option>
-              <option value="grayscale(100%)">Hitam Putih (B&W)</option>
-              <option value="sepia(80%)">Vintage Sepia</option>
-              <option value="contrast(140%) brightness(110%)">Vibrant High-Contrast</option>
-              <option value="hue-rotate(180deg)">Cyberpunk</option>
-              <option value="invert(100%)">Invert Negative</option>
-            </select>
-          </div>
-
-          <div class="tool-group">
-            <label for="modeSelect">Mode Foto:</label>
-            <select id="modeSelect">
-              <option value="single">Single Photo (1 Foto)</option>
-              <option value="strip4">Photobooth Strip (4-Cut)</option>
-            </select>
-          </div>
-
-          <div class="tool-group">
-            <label for="timerSelect">Timer:</label>
-            <select id="timerSelect">
-              <option value="0">Tanpa Timer</option>
-              <option value="3" selected>3 Detik</option>
-              <option value="5">5 Detik</option>
-            </select>
-          </div>
-
-          <div class="tool-group checkboxes">
-            <label class="checkbox-label">
-              <input type="checkbox" id="chkMirror" checked> Cermin (Mirror)
-            </label>
+    <!-- Main Landscape Layout: Left Viewfinder / Right Sidebar -->
+    <main class="landscape-main">
+      <!-- Left Screen: Camera / Result Display Area -->
+      <section class="display-area">
+        <!-- Live Video View -->
+        <div id="videoCard" class="screen-card active">
+          <div class="video-wrapper">
+            <video id="webcam" autoplay playsinline muted></video>
+            <div id="countdownOverlay" class="countdown-overlay"></div>
+            <div id="flashOverlay" class="flash-overlay"></div>
           </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-          <button id="btnToggleCam" class="btn btn-primary">Nyalakan Kamera</button>
-          <button id="btnCapture" class="btn btn-action" disabled>📸 Ambil Foto</button>
-        </div>
-
-        <div id="statusMsg" class="status-msg"></div>
-      </div>
-
-      <!-- Preview & Result Section -->
-      <section id="resultSection" class="result-card" style="display: none;">
-        <h2>✨ Hasil Foto</h2>
-        <div class="frame-style-selector" id="frameStyleControls" style="display: none;">
-          <label>Warna Frame Strip:</label>
-          <div class="color-options">
-            <button class="color-btn active" data-color="#ffffff" style="background: #ffffff;"></button>
-            <button class="color-btn" data-color="#1e293b" style="background: #1e293b;"></button>
-            <button class="color-btn" data-color="#fbcfe8" style="background: #fbcfe8;"></button>
-            <button class="color-btn" data-color="#bae6fd" style="background: #bae6fd;"></button>
-            <button class="color-btn" data-color="#fef08a" style="background: #fef08a;"></button>
+        <!-- Result Preview Card (replaces camera on capture) -->
+        <div id="resultCard" class="screen-card" style="display: none;">
+          <div class="result-wrapper">
+            <img id="resultImage" alt="Hasil Photobooth">
           </div>
-        </div>
-
-        <div class="preview-box">
-          <img id="resultImage" alt="Hasil Photobooth">
-        </div>
-
-        <div class="result-actions">
-          <button id="btnDownload" class="btn btn-success">💾 Unduh PNG</button>
         </div>
       </section>
-    </main>
 
-    <footer>
-      <p>Photobooth PWA &bull; GitHub Pages Ready</p>
-    </footer>
+      <!-- Right Screen: Controls Sidebar -->
+      <aside class="sidebar-area">
+        <div class="sidebar-card">
+          <div class="sidebar-header">
+            <h2 id="sidebarTitle">⚙️ Pengaturan Kamera</h2>
+            <button id="btnBackToCam" class="btn-text" style="display: none;">← Kembali ke Kamera</button>
+          </div>
+
+          <!-- Controls when in Camera Mode -->
+          <div id="cameraControls" class="control-section">
+            <div class="form-group">
+              <label for="cameraSelect">Pilih Kamera</label>
+              <select id="cameraSelect" disabled><option>Memuat kamera...</option></select>
+            </div>
+
+            <div class="form-group">
+              <label for="filterSelect">Filter Efek</label>
+              <select id="filterSelect">
+                <option value="none">Normal</option>
+                <option value="grayscale(100%)">Hitam Putih (B&W)</option>
+                <option value="sepia(80%)">Vintage Sepia</option>
+                <option value="contrast(140%) brightness(110%)">Vibrant High-Contrast</option>
+                <option value="hue-rotate(180deg)">Cyberpunk</option>
+                <option value="invert(100%)">Invert Negative</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="modeSelect">Mode Foto</label>
+              <select id="modeSelect">
+                <option value="strip4">Photobooth Strip (4-Cut)</option>
+                <option value="single">Single Photo (1 Foto)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="timerSelect">Timer Hitung Mundur</label>
+              <select id="timerSelect">
+                <option value="0">Tanpa Timer</option>
+                <option value="3" selected>3 Detik</option>
+                <option value="5">5 Detik</option>
+              </select>
+            </div>
+
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="chkMirror" checked> Mode Cermin (Mirror)
+              </label>
+            </div>
+
+            <div class="action-buttons">
+              <button id="btnToggleCam" class="btn btn-secondary">Nyalakan Kamera</button>
+              <button id="btnCapture" class="btn btn-action" disabled>📸 Ambil Foto</button>
+            </div>
+          </div>
+
+          <!-- Controls when Result is Displayed -->
+          <div id="resultControls" class="control-section" style="display: none;">
+            <div id="frameStyleControls" class="form-group">
+              <label>Warna Frame Strip</label>
+              <div class="color-options">
+                <button class="color-btn active" data-color="#ffffff" style="background: #ffffff;"></button>
+                <button class="color-btn" data-color="#1e293b" style="background: #1e293b;"></button>
+                <button class="color-btn" data-color="#fbcfe8" style="background: #fbcfe8;"></button>
+                <button class="color-btn" data-color="#bae6fd" style="background: #bae6fd;"></button>
+                <button class="color-btn" data-color="#fef08a" style="background: #fef08a;"></button>
+              </div>
+            </div>
+
+            <div class="action-buttons vertical">
+              <button id="btnDownload" class="btn btn-success">💾 Unduh Gambar (PNG)</button>
+              <button id="btnRetake" class="btn btn-secondary">🔄 Ambil Ulang Foto</button>
+            </div>
+          </div>
+
+          <div id="statusMsg" class="status-msg"></div>
+        </div>
+      </aside>
+    </main>
   </div>
 
   <canvas id="renderCanvas" style="display: none;"></canvas>

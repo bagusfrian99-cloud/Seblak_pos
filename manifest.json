@@ -1,9 +1,10 @@
 {
-  "name": "Photobooth PWA Studio",
+  "name": "Photobooth Studio Landscape",
   "short_name": "Photobooth",
-  "description": "Aplikasi Web Photobooth PWA interaktif dengan Strip 4 Foto, Filter, dan Download PNG.",
+  "description": "Photobooth PWA Kiosk Fullscreen Landscape",
   "start_url": "./index.html",
   "display": "standalone",
+  "orientation": "landscape",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "icons": [

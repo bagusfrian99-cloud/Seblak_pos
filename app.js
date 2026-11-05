@@ -8,13 +8,20 @@ const chkMirror = document.getElementById('chkMirror');
 const btnToggleCam = document.getElementById('btnToggleCam');
 const btnCapture = document.getElementById('btnCapture');
 const btnDownload = document.getElementById('btnDownload');
+const btnRetake = document.getElementById('btnRetake');
+const btnBackToCam = document.getElementById('btnBackToCam');
 const btnInstall = document.getElementById('btnInstall');
+
+const videoCard = document.getElementById('videoCard');
+const resultCard = document.getElementById('resultCard');
+const cameraControls = document.getElementById('cameraControls');
+const resultControls = document.getElementById('resultControls');
+const sidebarTitle = document.getElementById('sidebarTitle');
+const frameStyleControls = document.getElementById('frameStyleControls');
 
 const countdownOverlay = document.getElementById('countdownOverlay');
 const flashOverlay = document.getElementById('flashOverlay');
 const statusMsg = document.getElementById('statusMsg');
-const resultSection = document.getElementById('resultSection');
-const frameStyleControls = document.getElementById('frameStyleControls');
 const resultImage = document.getElementById('resultImage');
 const renderCanvas = document.getElementById('renderCanvas');
 
@@ -25,9 +32,8 @@ let deferredPrompt = null;
 let capturedPhotos = [];
 let selectedFrameColor = '#ffffff';
 
-// Check browser support
 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-  showError("Browser tidak mendukung kamera atau diakses tanpa HTTPS.");
+  showError("Browser tidak mendukung kamera / butuh koneksi HTTPS.");
 }
 
 function showError(msg) {
@@ -40,7 +46,6 @@ function clearError() {
   statusMsg.className = "status-msg";
 }
 
-// Camera devices enumeration
 async function getCameras() {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
@@ -65,7 +70,6 @@ async function getCameras() {
   }
 }
 
-// Start Stream
 async function startCamera(deviceId = null) {
   stopCamera();
 
@@ -94,16 +98,13 @@ async function startCamera(deviceId = null) {
     btnCapture.disabled = true;
 
     if (err.name === 'NotAllowedError') {
-      showError("Izin kamera ditolak. Izinkan akses di gembok browser Anda.");
-    } else if (err.name === 'NotReadableError') {
-      showError("Kamera terpakai oleh aplikasi lain (Zoom, OBS, dll).");
+      showError("Izin kamera ditolak.");
     } else {
       showError("Gagal membuka kamera: " + err.message);
     }
   }
 }
 
-// Stop Stream
 function stopCamera() {
   if (currentStream) {
     currentStream.getTracks().forEach(t => t.stop());
@@ -116,7 +117,6 @@ function stopCamera() {
   btnCapture.disabled = true;
 }
 
-// Mirroring & Filter Live Update
 chkMirror.addEventListener('change', () => {
   if (chkMirror.checked) {
     video.classList.add('mirror');
@@ -129,7 +129,6 @@ filterSelect.addEventListener('change', () => {
   video.style.filter = filterSelect.value;
 });
 
-// Countdown Helper
 function runCountdown(seconds) {
   return new Promise((resolve) => {
     if (seconds <= 0) return resolve();
@@ -151,13 +150,11 @@ function runCountdown(seconds) {
   });
 }
 
-// Flash Effect
 function triggerFlash() {
   flashOverlay.classList.add('active');
   setTimeout(() => flashOverlay.classList.remove('active'), 200);
 }
 
-// Single Shot Frame Grab
 function grabFrame() {
   const ctx = renderCanvas.getContext('2d');
   const w = video.videoWidth;
@@ -166,14 +163,10 @@ function grabFrame() {
   renderCanvas.height = h;
 
   ctx.save();
-
-  // Apply Mirror if needed
   if (chkMirror.checked) {
     ctx.translate(w, 0);
     ctx.scale(-1, 1);
   }
-
-  // Apply Filter
   if (filterSelect.value !== 'none') {
     ctx.filter = filterSelect.value;
   }
@@ -184,7 +177,6 @@ function grabFrame() {
   return renderCanvas.toDataURL('image/png');
 }
 
-// Capture Logic
 btnCapture.addEventListener('click', async () => {
   if (!isStreaming) return;
   btnCapture.disabled = true;
@@ -206,7 +198,7 @@ btnCapture.addEventListener('click', async () => {
       triggerFlash();
       const dataUrl = grabFrame();
       capturedPhotos.push(dataUrl);
-      await new Promise(r => setTimeout(r, 600)); // Jedah singkat antar foto
+      await new Promise(r => setTimeout(r, 600));
     }
     clearError();
     renderStripResult();
@@ -215,23 +207,36 @@ btnCapture.addEventListener('click', async () => {
   btnCapture.disabled = false;
 });
 
-// Render Single Photo Output
+function switchToResultView() {
+  videoCard.style.display = 'none';
+  resultCard.style.display = 'flex';
+  cameraControls.style.display = 'none';
+  resultControls.style.display = 'flex';
+  btnBackToCam.style.display = 'block';
+  sidebarTitle.textContent = "✨ Hasil & Frame";
+}
+
+function switchToCameraView() {
+  resultCard.style.display = 'none';
+  videoCard.style.display = 'flex';
+  resultControls.style.display = 'none';
+  cameraControls.style.display = 'flex';
+  btnBackToCam.style.display = 'none';
+  sidebarTitle.textContent = "⚙️ Pengaturan Kamera";
+}
+
 function renderSingleResult(dataUrl) {
   frameStyleControls.style.display = 'none';
   resultImage.src = dataUrl;
-  resultSection.style.display = 'block';
-  resultSection.scrollIntoView({ behavior: 'smooth' });
+  switchToResultView();
 }
 
-// Render 4-Cut Photobooth Strip
 function renderStripResult() {
   frameStyleControls.style.display = 'flex';
-
   const ctx = renderCanvas.getContext('2d');
   
-  // Dimensions for Photobooth Strip (Single Column 4 Shots)
   const photoW = 600;
-  const photoH = 450; // 4:3 Aspect ratio
+  const photoH = 450;
   const padding = 30;
   const gap = 20;
   const footerH = 100;
@@ -242,7 +247,6 @@ function renderStripResult() {
   renderCanvas.width = stripW;
   renderCanvas.height = stripH;
 
-  // Draw Background Frame
   ctx.fillStyle = selectedFrameColor;
   ctx.fillRect(0, 0, stripW, stripH);
 
@@ -255,27 +259,24 @@ function renderStripResult() {
       loadedCount++;
 
       if (loadedCount === 4) {
-        // Draw Footer Text
         ctx.fillStyle = (selectedFrameColor === '#ffffff' || selectedFrameColor === '#fbcfe8' || selectedFrameColor === '#bae6fd' || selectedFrameColor === '#fef08a') ? '#0f172a' : '#ffffff';
         ctx.font = 'bold 24px system-ui, sans-serif';
         ctx.textAlign = 'center';
         
         const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-        ctx.fillText('PHOTOBOOTH PWA', stripW / 2, stripH - 45);
+        ctx.fillText('PHOTOBOOTH STUDIO', stripW / 2, stripH - 45);
         
         ctx.font = '14px system-ui, sans-serif';
         ctx.fillText(dateStr, stripW / 2, stripH - 22);
 
         resultImage.src = renderCanvas.toDataURL('image/png');
-        resultSection.style.display = 'block';
-        resultSection.scrollIntoView({ behavior: 'smooth' });
+        switchToResultView();
       }
     };
     img.src = src;
   });
 }
 
-// Change Frame Color
 document.querySelectorAll('.color-btn').forEach(btn => {
   btn.addEventListener('click', (e) => {
     document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
@@ -287,7 +288,6 @@ document.querySelectorAll('.color-btn').forEach(btn => {
   });
 });
 
-// Download Action
 btnDownload.addEventListener('click', () => {
   const link = document.createElement('a');
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -298,7 +298,9 @@ btnDownload.addEventListener('click', () => {
   document.body.removeChild(link);
 });
 
-// Event Listeners for controls
+btnRetake.addEventListener('click', switchToCameraView);
+btnBackToCam.addEventListener('click', switchToCameraView);
+
 btnToggleCam.addEventListener('click', () => {
   if (isStreaming) stopCamera();
   else startCamera(cameraSelect.value);
@@ -308,7 +310,6 @@ cameraSelect.addEventListener('change', () => {
   if (isStreaming) startCamera(cameraSelect.value);
 });
 
-// PWA Install Prompt Listener
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
